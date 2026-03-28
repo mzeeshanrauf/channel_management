@@ -1,0 +1,101 @@
+import frappe
+from frappe.utils import today, getdate, date_diff
+from channel_management.doctype.kpi_target.kpi_target import _get_achieved_value
+
+
+def update_plan_statuses():
+    """
+    Runs daily. Updates status of all non-cancelled Customer Plans.
+    Expiring Soon  = 30 days or less remaining
+    Renewal Required = 7 days or less remaining
+    Expired = past end date
+    """
+    today_date = getdate(today())
+
+    plans = frappe.get_all(
+        "Customer Plan",
+        filters={"status": ["not in", ["Cancelled", "Expired"]]},
+        fields=["name", "end_date", "status"]
+    )
+
+    updated = 0
+    for p in plans:
+        if not p.end_date:
+            continue
+
+        end = getdate(p.end_date)
+        days_left = date_diff(end, today_date)
+
+        if days_left < 0:
+            new_status = "Expired"
+        elif days_left <= 7:
+            new_status = "Renewal Required"
+        elif days_left <= 30:
+            new_status = "Expiring Soon"
+        else:
+            new_status = "Active"
+
+        if new_status != p.status:
+            frappe.db.set_value(
+                "Customer Plan", p.name,
+                {"status": new_status, "days_to_expiry": days_left},
+                update_modified=False
+            )
+            updated += 1
+
+    frappe.db.commit()
+    frappe.logger().info(
+        f"[Channel Management] Daily plan status update: {updated} plans updated."
+    )
+
+
+def update_kpi_achievements():
+    """
+    Runs daily. Recalculates achieved_value, achievement_percentage
+    and status for all open KPI Targets whose period includes today.
+    """
+    today_date = getdate(today())
+
+    kpis = frappe.get_all(
+        "KPI Target",
+        filters={
+            "period_start": ["<=", today_date],
+            "period_end":   [">=", today_date],
+        },
+        fields=["name", "sales_person", "kpi_type", "period_start", "period_end", "target_value"]
+    )
+
+    updated = 0
+    for k in kpis:
+        achieved = _get_achieved_value(
+            k.sales_person,
+            k.kpi_type,
+            k.period_start,
+            k.period_end,
+        )
+        pct = (achieved / k.target_value * 100) if k.target_value else 0
+
+        if pct >= 100:
+            status = "Achieved"
+        elif pct >= 70:
+            status = "On Track"
+        elif pct >= 40:
+            status = "At Risk"
+        else:
+            status = "Missed"
+
+        frappe.db.set_value(
+            "KPI Target", k.name,
+            {
+                "achieved_value": achieved,
+                "achievement_percentage": pct,
+                "status": status,
+            },
+            update_modified=False
+        )
+        updated += 1
+
+    frappe.db.commit()
+    frappe.logger().info(
+        f"[Channel Management] Daily KPI update: {updated} KPI records updated."
+    )

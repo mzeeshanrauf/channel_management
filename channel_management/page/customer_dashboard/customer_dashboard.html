@@ -1,0 +1,14 @@
+{% extends "templates/includes/base.html" %}
+
+{% block page_content %}
+<div id="customer-dashboard-wrapper" class="container-fluid mt-3">
+    <div class="page-header mb-4">
+        <h3 class="page-title">
+            <i class="fa fa-users text-primary"></i>
+            {{ _("Customer Dashboard") }}
+        </h3>
+    </div>
+    <!-- Rendered by customer_dashboard.js -->
+    <div id="cm-dashboard-root"></div>
+</div>
+{% endblock %}

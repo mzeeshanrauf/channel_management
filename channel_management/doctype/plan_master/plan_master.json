@@ -1,0 +1,124 @@
+{
+ "actions": [],
+ "autoname": "field:plan_name",
+ "creation": "2024-01-01 00:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "plan_name",
+  "item",
+  "col_break_1",
+  "validity_value",
+  "validity_unit",
+  "section_break_desc",
+  "description",
+  "section_break_meta",
+  "is_active",
+  "col_break_meta",
+  "plan_category"
+ ],
+ "fields": [
+  {
+   "bold": 1,
+   "fieldname": "plan_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Plan Name",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "item",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Item (ERPNext)",
+   "options": "Item",
+   "reqd": 1,
+   "description": "Link to ERPNext Item for Sales Order integration"
+  },
+  {
+   "fieldname": "col_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "validity_value",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Validity",
+   "reqd": 1,
+   "default": "30"
+  },
+  {
+   "fieldname": "validity_unit",
+   "fieldtype": "Select",
+   "label": "Validity Unit",
+   "options": "Days\nMonths\nYears",
+   "reqd": 1,
+   "default": "Days"
+  },
+  {
+   "fieldname": "section_break_desc",
+   "fieldtype": "Section Break",
+   "label": "Plan Details"
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Text Editor",
+   "label": "Description"
+  },
+  {
+   "fieldname": "section_break_meta",
+   "fieldtype": "Section Break",
+   "label": "Classification"
+  },
+  {
+   "default": "1",
+   "fieldname": "is_active",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Is Active"
+  },
+  {
+   "fieldname": "col_break_meta",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "plan_category",
+   "fieldtype": "Select",
+   "label": "Plan Category",
+   "options": "\nBasic\nStandard\nPremium\nEnterprise"
+  }
+ ],
+ "links": [],
+ "modified": "2024-01-01 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Channel Management",
+ "name": "Plan Master",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Channel Manager",
+   "write": 1
+  },
+  {
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "Channel Sales"
+  }
+ ],
+ "search_fields": "plan_name,item",
+ "sort_field": "plan_name",
+ "sort_order": "ASC",
+ "title_field": "plan_name",
+ "track_changes": 1
+}

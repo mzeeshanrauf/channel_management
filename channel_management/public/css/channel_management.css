@@ -1,0 +1,46 @@
+/* ─── Channel Management App Styles ─────────────────────────────────────── */
+
+/* Hide actual price fields from non-managers at CSS level (backed by server) */
+body:not(.has-role-channel-manager):not(.has-role-administrator) .frappe-control[data-fieldname="actual_rate_snapshot"],
+body:not(.has-role-channel-manager):not(.has-role-administrator) .frappe-control[data-fieldname="price_gap"],
+body:not(.has-role-channel-manager):not(.has-role-administrator) [data-fieldname="price_gap"],
+body:not(.has-role-channel-manager):not(.has-role-administrator) [data-fieldname="actual_rate_snapshot"] {
+    display: none !important;
+}
+
+/* ─── KPI Status Badges ──────────────────────────────────────────────────── */
+.cm-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+}
+.cm-badge-achieved  { background: #e8f5e9; color: #2e7d32; }
+.cm-badge-on-track  { background: #e3f2fd; color: #1565c0; }
+.cm-badge-at-risk   { background: #fff3e0; color: #e65100; }
+.cm-badge-missed    { background: #ffebee; color: #c62828; }
+
+/* ─── Customer Dashboard Cards ───────────────────────────────────────────── */
+.cm-dashboard .card {
+    border-radius: 8px;
+    transition: box-shadow 0.2s ease;
+}
+.cm-dashboard .card:hover {
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1) !important;
+}
+.cm-dashboard .kpi-value {
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1.1;
+}
+
+/* ─── Renewal Status Colors in Lists ─────────────────────────────────────── */
+.status-renewal-required { color: #c62828; font-weight: 600; }
+.status-expiring-soon    { color: #e65100; font-weight: 600; }
+.status-expired          { color: #757575; }
+.status-active           { color: #2e7d32; }
+
+/* ─── Role body classes (injected by app JS) ─────────────────────────────── */
+/* Used for CSS-level field hiding above */

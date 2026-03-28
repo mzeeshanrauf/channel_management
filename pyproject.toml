@@ -1,0 +1,8 @@
+[project]
+name = "channel_management"
+version = "1.0.0"
+description = "DU Channel Partner Management App for ERPNext v16"
+
+[build-system]
+requires = ["flit_core >=3.2.0,<4"]
+build-backend = "flit_core.buildapi"
