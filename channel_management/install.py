@@ -7,7 +7,6 @@ def after_install():
     create_roles()
     create_custom_fields_on_sales_order()
     create_custom_fields_on_sales_order_item()
-    setup_role_permissions()
     print("✅ Channel Management app installed successfully.")
 
 
@@ -39,7 +38,7 @@ def create_roles():
 # ─── Custom Fields ────────────────────────────────────────────────────────────
 
 def create_custom_fields_on_sales_order():
-    """Add a section on Sales Order header for channel info."""
+    """Add channel fields on Sales Order header."""
     fields = {
         "Sales Order": [
             {
@@ -48,7 +47,6 @@ def create_custom_fields_on_sales_order():
                 "fieldtype": "Section Break",
                 "insert_after": "selling_price_list",
                 "collapsible": 1,
-                "collapsible_depends_on": "eval:1",
             },
             {
                 "fieldname": "channel_partner",
@@ -56,7 +54,6 @@ def create_custom_fields_on_sales_order():
                 "fieldtype": "Link",
                 "options": "Customer",
                 "insert_after": "channel_section",
-                "read_only": 0,
             },
             {
                 "fieldname": "channel_col_break",
@@ -114,50 +111,7 @@ def create_custom_fields_on_sales_order_item():
                 "fieldtype": "Currency",
                 "insert_after": "discloseable_amount",
                 "read_only": 1,
-                "description": "Actual Amount - Discloseable Amount (visible to management only)",
             },
         ]
     }
     create_custom_fields(fields, ignore_validate=True)
-
-
-# ─── Role Permissions ─────────────────────────────────────────────────────────
-
-def setup_role_permissions():
-    """Set up DocType-level role permissions for custom doctypes."""
-    perms = [
-        # Plan Master
-        {"role": "Channel Sales",   "doctype": "Plan Master",    "read": 1, "write": 0, "create": 0, "delete": 0},
-        {"role": "Channel Manager", "doctype": "Plan Master",    "read": 1, "write": 1, "create": 1, "delete": 1},
-        # Channel Pricing
-        {"role": "Channel Sales",   "doctype": "Channel Pricing","read": 0, "write": 0, "create": 0, "delete": 0},
-        {"role": "Channel Manager", "doctype": "Channel Pricing","read": 1, "write": 1, "create": 1, "delete": 1},
-        # Customer Plan
-        {"role": "Channel Sales",   "doctype": "Customer Plan",  "read": 1, "write": 0, "create": 0, "delete": 0},
-        {"role": "Channel Manager", "doctype": "Customer Plan",  "read": 1, "write": 1, "create": 1, "delete": 1},
-        # KPI Target
-        {"role": "Channel Sales",   "doctype": "KPI Target",     "read": 1, "write": 0, "create": 0, "delete": 0},
-        {"role": "Channel Manager", "doctype": "KPI Target",     "read": 1, "write": 1, "create": 1, "delete": 1},
-    ]
-
-    for p in perms:
-        existing = frappe.db.get_value(
-            "DocPerm",
-            {"parent": p["doctype"], "role": p["role"], "parenttype": "DocType"},
-            "name"
-        )
-        if not existing:
-            doc = frappe.get_doc("DocType", p["doctype"])
-            doc.append("permissions", {
-                "role":   p["role"],
-                "read":   p["read"],
-                "write":  p["write"],
-                "create": p["create"],
-                "delete": p["delete"],
-                "report": 1 if p["role"] == "Channel Manager" else 0,
-                "export": 1 if p["role"] == "Channel Manager" else 0,
-                "import": 0,
-                "print":  1,
-                "email":  1,
-            })
-            doc.save(ignore_permissions=True)
