@@ -52,11 +52,16 @@ has_permission = {
     "KPI Target":    "channel_management.permissions.kpi_target.has_permission",
 }
 
-# ─── Website / UI ─────────────────────────────────────────────────────────────
+# ─── Static Assets ────────────────────────────────────────────────────────────
+# CSS is served directly from /assets/ — no esbuild bundle needed
 app_include_css = ["/assets/channel_management/css/channel_management.css"]
-app_include_js  = ["/assets/channel_management/js/channel_management.js"]
 
-# ─── DocType Client Scripts ───────────────────────────────────────────────────
+# NOTE: Do NOT use app_include_js with a plain .js file in Frappe v16.
+# Frappe v16 esbuild requires a proper bundle entry declared in
+# channel_management/public/js/channel_management.bundle.js
+# Plain JS role-injection logic is embedded inside each doctype_js file instead.
+
+# ─── DocType Client Scripts (no esbuild — served directly by Frappe) ─────────
 doctype_js = {
     "Sales Order": "public/js/sales_order.js",
 }
