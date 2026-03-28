@@ -8,7 +8,6 @@ def after_install():
     create_custom_fields_on_sales_order()
     create_custom_fields_on_sales_order_item()
     setup_role_permissions()
-    frappe.db.commit()
     print("✅ Channel Management app installed successfully.")
 
 
