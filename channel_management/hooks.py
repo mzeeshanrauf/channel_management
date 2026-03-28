@@ -53,15 +53,15 @@ has_permission = {
 }
 
 # ─── Static Assets ────────────────────────────────────────────────────────────
-# CSS is served directly from /assets/ — no esbuild bundle needed
+# CSS: served directly from /assets/ (no esbuild needed for CSS)
 app_include_css = ["/assets/channel_management/css/channel_management.css"]
 
-# NOTE: Do NOT use app_include_js with a plain .js file in Frappe v16.
-# Frappe v16 esbuild requires a proper bundle entry declared in
-# channel_management/public/js/channel_management.bundle.js
-# Plain JS role-injection logic is embedded inside each doctype_js file instead.
+# JS: references the esbuild output bundle (built from public/js/channel_management.bundle.js)
+# Frappe v16 esbuild reads public/build.json to locate bundle entries.
+app_include_js = ["/assets/channel_management/js/channel_management.bundle.js"]
 
-# ─── DocType Client Scripts (no esbuild — served directly by Frappe) ─────────
+# ─── DocType Client Scripts ────────────────────────────────────────────────────
+# Path is relative to the app module folder (channel_management/channel_management/)
 doctype_js = {
     "Sales Order": "public/js/sales_order.js",
 }
