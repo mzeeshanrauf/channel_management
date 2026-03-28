@@ -22,13 +22,10 @@ fixtures = [
     },
 ]
 
-# ─── Custom Fields on Sales Order Item ───────────────────────────────────────
-# (Added via install hook for reliability)
-
 # ─── Document Events ─────────────────────────────────────────────────────────
 doc_events = {
     "Sales Order": {
-        "validate": "channel_management.events.sales_order.on_validate",
+        "validate":  "channel_management.events.sales_order.on_validate",
         "on_submit": "channel_management.events.sales_order.on_submit",
         "on_cancel": "channel_management.events.sales_order.on_cancel",
     }
@@ -53,15 +50,15 @@ has_permission = {
 }
 
 # ─── Static Assets ────────────────────────────────────────────────────────────
-# CSS: served directly from /assets/ (no esbuild needed for CSS)
+# CSS served directly — no esbuild required
 app_include_css = ["/assets/channel_management/css/channel_management.css"]
 
-# JS: references the esbuild output bundle (built from public/js/channel_management.bundle.js)
-# Frappe v16 esbuild reads public/build.json to locate bundle entries.
-app_include_js = ["/assets/channel_management/js/channel_management.bundle.js"]
+# JS bundle — esbuild auto-discovers *.bundle.js files in public/
+# NOTE: app_include_js is intentionally removed.
+# The Sales Order JS is loaded via doctype_js (Frappe's own pipeline, no esbuild).
+# Role injection is handled inside the doctype JS itself.
 
 # ─── DocType Client Scripts ────────────────────────────────────────────────────
-# Path is relative to the app module folder (channel_management/channel_management/)
 doctype_js = {
     "Sales Order": "public/js/sales_order.js",
 }
