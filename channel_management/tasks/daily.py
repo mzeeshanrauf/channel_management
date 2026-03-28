@@ -1,6 +1,6 @@
 import frappe
 from frappe.utils import today, getdate, date_diff
-from channel_management.doctype.kpi_target.kpi_target import _get_achieved_value
+from channel_management.channel_management.doctype.kpi_target.kpi_target import _get_achieved_value
 
 
 def update_plan_statuses():
