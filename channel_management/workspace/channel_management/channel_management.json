@@ -1,6 +1,6 @@
 {
  "charts": [],
- "content": "[{\"id\":\"section_with_cards\",\"type\":\"section\",\"data\":{\"title\":\"Channel Management\",\"column_count\":\"3\",\"hideTitle\":0,\"collapsible\":0},\"items\":[{\"id\":\"plan_master_shortcut\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Plan Master\",\"color\":\"Blue\"}},{\"id\":\"channel_pricing_shortcut\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Channel Pricing\",\"color\":\"Green\"}},{\"id\":\"customer_plan_shortcut\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Customer Plan\",\"color\":\"Orange\"}}]},{\"id\":\"section_kpi\",\"type\":\"section\",\"data\":{\"title\":\"KPI & Reports\",\"column_count\":\"3\",\"hideTitle\":0,\"collapsible\":0},\"items\":[{\"id\":\"kpi_target_shortcut\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"KPI Target\",\"color\":\"Purple\"}},{\"id\":\"kpi_report_shortcut\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"KPI Report\",\"color\":\"Blue\"}},{\"id\":\"renewal_report_shortcut\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Renewal Report\",\"color\":\"Orange\"}}]},{\"id\":\"section_mgmt\",\"type\":\"section\",\"data\":{\"title\":\"Management\",\"column_count\":\"2\",\"hideTitle\":0,\"collapsible\":0},\"items\":[{\"id\":\"margin_report_shortcut\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Sales Margin Report\",\"color\":\"Red\"}}]}]",
+ "content": "[]",
  "creation": "2024-01-01 00:00:00.000000",
  "doctype": "Workspace",
  "hide_custom": 0,
@@ -17,49 +17,63 @@
   {"role": "Channel Sales"},
   {"role": "Channel Manager"}
  ],
- "sequence_id": 1,
+ "sequence_id": 1.0,
  "shortcuts": [
   {
    "color": "Blue",
    "label": "Plan Master",
    "link_to": "Plan Master",
-   "type": "DocType"
+   "type": "DocType",
+   "icon": "list"
   },
   {
    "color": "Green",
    "label": "Channel Pricing",
    "link_to": "Channel Pricing",
-   "type": "DocType"
+   "type": "DocType",
+   "icon": "price-tag"
   },
   {
    "color": "Orange",
    "label": "Customer Plan",
    "link_to": "Customer Plan",
-   "type": "DocType"
+   "type": "DocType",
+   "icon": "calendar"
   },
   {
    "color": "Purple",
    "label": "KPI Target",
    "link_to": "KPI Target",
-   "type": "DocType"
+   "type": "DocType",
+   "icon": "target"
   },
   {
    "color": "Blue",
    "label": "KPI Report",
    "link_to": "KPI Report",
-   "type": "Report"
+   "type": "Report",
+   "icon": "bar-chart"
   },
   {
    "color": "Orange",
    "label": "Renewal Report",
    "link_to": "Renewal Report",
-   "type": "Report"
+   "type": "Report",
+   "icon": "refresh"
   },
   {
    "color": "Red",
    "label": "Sales Margin Report",
    "link_to": "Sales Margin Report",
-   "type": "Report"
+   "type": "Report",
+   "icon": "money"
+  },
+  {
+   "color": "Grey",
+   "label": "Customer Dashboard",
+   "link_to": "customer-dashboard",
+   "type": "Page",
+   "icon": "dashboard"
   }
  ],
  "title": "Channel Management"

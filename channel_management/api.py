@@ -5,8 +5,9 @@ from frappe import _
 @frappe.whitelist()
 def get_pricing_for_plan(plan, partner=None):
     """
-    Public API: Returns pricing (discloseable only for sales, full for managers).
-    Called from Sales Order form JS to auto-fill pricing fields.
+    Returns pricing for a plan.
+    - Managers get both actual_price and discloseable_price
+    - Sales get only discloseable_price (actual is set server-side on validate)
     """
     from channel_management.events.sales_order import _get_channel_pricing
 
@@ -15,24 +16,43 @@ def get_pricing_for_plan(plan, partner=None):
         return None
 
     user       = frappe.session.user
-    is_manager = frappe.has_role("Channel Manager", user=user) or frappe.has_role("Administrator", user=user)
+    is_manager = (
+        frappe.has_role("Channel Manager", user=user) or
+        frappe.has_role("Administrator",   user=user)
+    )
 
-    result = {"discloseable_price": pricing["discloseable_price"]}
-    if is_manager:
-        result["actual_price"] = pricing["actual_price"]
-        result["price_gap"]    = pricing["actual_price"] - pricing["discloseable_price"]
+    # Always return discloseable price so the JS can populate the field
+    result = {
+        "discloseable_price": flt(pricing["discloseable_price"]),
+        "actual_price":       flt(pricing["actual_price"]),   # needed so rate field gets set
+        "price_gap":          flt(pricing["actual_price"]) - flt(pricing["discloseable_price"]),
+        "is_manager":         is_manager,
+    }
+
+    # For sales users, mask actual_price in the response
+    # (server-side on_validate will always use the real actual_price)
+    if not is_manager:
+        result["actual_price"] = flt(pricing["discloseable_price"])
+        result["price_gap"]    = 0
 
     return result
 
 
+def flt(val):
+    try:
+        return float(val or 0)
+    except Exception:
+        return 0.0
+
+
 @frappe.whitelist()
 def get_customer_plan_status_counts():
-    """
-    Returns counts of plans by status for the current user.
-    Used by dashboard number cards.
-    """
+    """Returns counts of plans by status for the current user."""
     user       = frappe.session.user
-    is_manager = frappe.has_role("Channel Manager", user=user) or frappe.has_role("Administrator", user=user)
+    is_manager = (
+        frappe.has_role("Channel Manager", user=user) or
+        frappe.has_role("Administrator",   user=user)
+    )
 
     conditions = ""
     values     = []
@@ -51,12 +71,7 @@ def get_customer_plan_status_counts():
         GROUP BY status
     """, values, as_dict=True)
 
-    counts = {
-        "Active": 0,
-        "Expiring Soon": 0,
-        "Renewal Required": 0,
-        "Expired": 0,
-    }
+    counts = {"Active": 0, "Expiring Soon": 0, "Renewal Required": 0, "Expired": 0}
     for row in result:
         if row.status in counts:
             counts[row.status] = row.count
@@ -66,18 +81,17 @@ def get_customer_plan_status_counts():
 
 @frappe.whitelist()
 def get_my_kpi_summary():
-    """
-    Returns KPI summary for the currently logged-in sales person.
-    Managers get all; sales get their own.
-    """
+    """Returns KPI summary for the logged-in sales person."""
     from frappe.utils import today, getdate
 
     user       = frappe.session.user
-    is_manager = frappe.has_role("Channel Manager", user=user) or frappe.has_role("Administrator", user=user)
+    is_manager = (
+        frappe.has_role("Channel Manager", user=user) or
+        frappe.has_role("Administrator",   user=user)
+    )
 
     today_date = getdate(today())
-
-    filters = {
+    filters    = {
         "period_start": ["<=", today_date],
         "period_end":   [">=", today_date],
     }
@@ -91,7 +105,7 @@ def get_my_kpi_summary():
     return frappe.get_all(
         "KPI Target",
         filters=filters,
-        fields=["sales_person", "kpi_type", "period_label", "target_value",
-                "achieved_value", "achievement_percentage", "status"],
+        fields=["sales_person", "kpi_type", "period_label",
+                "target_value", "achieved_value", "achievement_percentage", "status"],
         order_by="achievement_percentage asc",
     )
