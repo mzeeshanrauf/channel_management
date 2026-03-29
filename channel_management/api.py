@@ -15,7 +15,7 @@ def get_pricing_for_plan(plan, partner=None):
     Get Channel Pricing for a plan.
     Managers see actual_price. Sales see only sale_amount (discloseable).
     """
-    from channel_management.channel_management.doctype.sales_form.sales_form import get_channel_pricing
+    from channel_management.channel_management.channel_management.doctype.sales_form.sales_form import get_channel_pricing
 
     pricing = get_channel_pricing(plan, partner)
     if not pricing:
