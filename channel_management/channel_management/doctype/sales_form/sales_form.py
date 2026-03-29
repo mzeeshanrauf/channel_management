@@ -1,6 +1,6 @@
 import frappe
 from frappe.model.document import Document
-from frappe.utils import today
+from frappe.utils import today, flt
 
 
 class SalesForm(Document):
@@ -10,10 +10,10 @@ class SalesForm(Document):
         self.fetch_pricing_for_items()
         self.calculate_totals()
 
-    def on_update_after_submit(self):
+    def after_insert(self):
         pass
 
-    def after_insert(self):
+    def on_update_after_submit(self):
         pass
 
     # ── Validation ────────────────────────────────────────────────────────────
@@ -42,7 +42,6 @@ class SalesForm(Document):
             row.actual_amount = pricing["actual_price"]
             row.price_gap     = pricing["actual_price"] - pricing["discloseable_price"]
 
-            # Validate dates
             if row.start_date and row.end_date:
                 if row.end_date < row.start_date:
                     frappe.throw(
@@ -54,12 +53,11 @@ class SalesForm(Document):
         self.total_actual_amount = sum(flt(r.actual_amount) for r in self.plans)
         self.total_price_gap     = sum(flt(r.price_gap)     for r in self.plans)
 
-    # ── Workflow hooks ────────────────────────────────────────────────────────
+    # ── Workflow approval — triggered via doc_events in hooks.py ──────────────
 
-    def on_workflow_action(self, workflow_action):
-        """Called when workflow action is taken."""
-        if workflow_action == "Approve":
-            self.create_customer_plans()
+    def on_approved(self):
+        """Called when workflow state becomes Approved."""
+        self.create_customer_plans()
 
     def create_customer_plans(self):
         """Create Customer Plan records for each plan row when approved."""
@@ -75,14 +73,14 @@ class SalesForm(Document):
                 continue
 
             cp = frappe.new_doc("Customer Plan")
-            cp.customer              = self.customer
-            cp.plan                  = row.plan
-            cp.sales_form            = self.name
-            cp.sales_person          = self.sales_person
-            cp.start_date            = row.start_date
-            cp.end_date              = row.end_date
-            cp.status                = "Active"
-            cp.sale_amount_snapshot  = row.sale_amount
+            cp.customer               = self.customer
+            cp.plan                   = row.plan
+            cp.sales_form             = self.name
+            cp.sales_person           = self.sales_person
+            cp.start_date             = row.start_date
+            cp.end_date               = row.end_date
+            cp.status                 = "Active"
+            cp.sale_amount_snapshot   = row.sale_amount
             cp.actual_amount_snapshot = row.actual_amount
             cp.insert(ignore_permissions=True)
 
@@ -118,8 +116,12 @@ def get_channel_pricing(plan, partner=None):
     return _fetch({"partner": ["is", "not set"]})
 
 
-def flt(val):
-    try:
-        return float(val or 0)
-    except Exception:
-        return 0.0
+def handle_workflow_change(doc, method=None):
+    """
+    Called on every save of Sales Form via doc_events on_change hook.
+    Creates Customer Plans when the workflow reaches 'Approved' (idempotent).
+    """
+    if doc.workflow_state == "Approved":
+        existing = frappe.db.count("Customer Plan", {"sales_form": doc.name})
+        if not existing:
+            doc.create_customer_plans()

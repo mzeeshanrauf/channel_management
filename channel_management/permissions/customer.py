@@ -1,4 +1,5 @@
 import frappe
+from channel_management.channel_management.utils import get_sales_person_for_user
 
 
 def has_permission(doc, ptype="read", user=None):
@@ -12,7 +13,7 @@ def has_permission(doc, ptype="read", user=None):
         if ptype in ("create", "write", "delete"):
             return False
 
-        sp = _get_sales_person(user)
+        sp = get_sales_person_for_user(user)
         if not sp:
             return False
 
@@ -20,7 +21,3 @@ def has_permission(doc, ptype="read", user=None):
         return True if doc.get("assigned_sales_person") == sp else False
 
     return False
-
-
-def _get_sales_person(user):
-    return frappe.db.get_value("Sales Person", {"user_id": user}, "name")

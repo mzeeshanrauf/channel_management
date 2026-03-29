@@ -2,7 +2,7 @@ import frappe
 
 
 def execute():
-    from channel_management.install import create_roles, create_customer_custom_fields
+    from channel_management.channel_management.install import create_roles, create_customer_custom_fields
     create_roles()
     create_customer_custom_fields()
     frappe.db.commit()

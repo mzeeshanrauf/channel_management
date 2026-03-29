@@ -59,7 +59,8 @@ def get_data(filters):
         values["plan"] = filters["plan"]
 
     if not is_manager:
-        sp = frappe.db.get_value("Sales Person", {"user_id": user}, "name")
+        from channel_management.channel_management.utils import get_sales_person_for_user
+        sp = get_sales_person_for_user(user)
         if not sp:
             return []
         conditions.append("cp.sales_person = %(sp)s")

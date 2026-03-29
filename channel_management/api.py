@@ -1,12 +1,12 @@
 import frappe
 from frappe import _
+from channel_management.channel_management.utils import get_sales_person_for_user
 
 
 @frappe.whitelist()
-def get_sales_person_for_user():
-    """Get Sales Person linked to logged-in user via user_id custom field."""
-    sp = frappe.db.get_value("Sales Person", {"user_id": frappe.session.user}, "name")
-    return sp or None
+def get_sales_person_for_user_api():
+    """Get Sales Person linked to logged-in user (ERPNext v15 compatible)."""
+    return get_sales_person_for_user(frappe.session.user)
 
 
 @frappe.whitelist()
@@ -48,7 +48,7 @@ def get_customer_plan_summary(customer):
 
     # For sales, verify they are assigned to this customer
     if not is_manager:
-        sp = frappe.db.get_value("Sales Person", {"user_id": user}, "name")
+        sp = get_sales_person_for_user(user)
         assigned_sp = frappe.db.get_value("Customer", customer, "assigned_sales_person")
         if sp != assigned_sp:
             frappe.throw(_("Not permitted to view this customer's plans."), frappe.PermissionError)
@@ -90,7 +90,7 @@ def get_customer_plan_summary(customer):
 def get_my_customers():
     """Get customers assigned to the logged-in sales person."""
     user = frappe.session.user
-    sp   = frappe.db.get_value("Sales Person", {"user_id": user}, "name")
+    sp   = get_sales_person_for_user(user)
     if not sp:
         return []
 
@@ -115,7 +115,7 @@ def get_dashboard_stats():
     values    = []
 
     if not is_manager:
-        sp = frappe.db.get_value("Sales Person", {"user_id": user}, "name")
+        sp = get_sales_person_for_user(user)
         if sp:
             sp_filter = "AND sales_person = %s"
             values.append(sp)

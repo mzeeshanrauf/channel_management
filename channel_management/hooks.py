@@ -18,7 +18,7 @@ fixtures = [
     ]]]},
 ]
 
-# ─── Scheduled Tasks ─────────────────────────────────────────────────────────
+# ─── Scheduled Tasks ──────────────────────────────────────────────────────────
 scheduler_events = {
     "daily": [
         "channel_management.channel_management.tasks.daily.update_plan_statuses",
@@ -30,12 +30,20 @@ scheduler_events = {
 after_install = "channel_management.channel_management.install.after_install"
 after_migrate = "channel_management.channel_management.install.after_install"
 
-# ─── Permissions ─────────────────────────────────────────────────────────────
+# ─── Permissions ──────────────────────────────────────────────────────────────
 has_permission = {
     "Sales Form":    "channel_management.channel_management.permissions.sales_form.has_permission",
     "Customer Plan": "channel_management.channel_management.permissions.customer_plan.has_permission",
     "KPI Target":    "channel_management.channel_management.permissions.kpi_target.has_permission",
     "Customer":      "channel_management.channel_management.permissions.customer.has_permission",
+}
+
+# ─── Doc Events (workflow approval trigger) ───────────────────────────────────
+# on_workflow_action was removed in ERPNext v14+. Use doc_events on_change instead.
+doc_events = {
+    "Sales Form": {
+        "on_change": "channel_management.channel_management.channel_management.doctype.sales_form.sales_form.handle_workflow_change",
+    }
 }
 
 # ─── Assets ───────────────────────────────────────────────────────────────────
