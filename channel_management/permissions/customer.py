@@ -11,9 +11,16 @@ def has_permission(doc, ptype="read", user=None):
     if frappe.has_role("Channel Sales", user=user):
         if ptype in ("create", "write", "delete"):
             return False
-        sp = frappe.db.get_value("Sales Person", {"user_id": user}, "name")
+
+        sp = _get_sales_person(user)
         if not sp:
             return False
-        return True if doc.sales_person == sp else False
+
+        # Sales can only see customers assigned to them
+        return True if doc.get("assigned_sales_person") == sp else False
 
     return False
+
+
+def _get_sales_person(user):
+    return frappe.db.get_value("Sales Person", {"user_id": user}, "name")

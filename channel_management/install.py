@@ -3,115 +3,135 @@ from frappe.custom.doctype.custom_field.custom_field import create_custom_fields
 
 
 def after_install():
-    """Run after app install or migrate."""
     create_roles()
-    create_custom_fields_on_sales_order()
-    create_custom_fields_on_sales_order_item()
-    print("✅ Channel Management app installed successfully.")
+    create_customer_custom_fields()
+    create_workflow()
+    frappe.db.commit()
+    print("✅ Channel Management installed successfully.")
 
 
-# ─── Roles ───────────────────────────────────────────────────────────────────
+# ─── Roles ────────────────────────────────────────────────────────────────────
 
 def create_roles():
-    roles = [
-        {
-            "role_name": "Channel Sales",
-            "desk_access": 1,
-            "description": "DU Channel Partner Sales Team Member"
-        },
-        {
-            "role_name": "Channel Manager",
-            "desk_access": 1,
-            "description": "DU Channel Partner Manager / Management"
-        },
-    ]
-    for r in roles:
-        if not frappe.db.exists("Role", r["role_name"]):
+    for role_name, desc in [
+        ("Channel Sales",   "DU Channel Partner Sales Team Member"),
+        ("Channel Manager", "DU Channel Partner Manager"),
+    ]:
+        if not frappe.db.exists("Role", role_name):
             doc = frappe.new_doc("Role")
-            doc.role_name = r["role_name"]
-            doc.desk_access = r["desk_access"]
-            doc.description = r["description"]
+            doc.role_name   = role_name
+            doc.desk_access = 1
+            doc.description = desc
             doc.insert(ignore_permissions=True)
-            print(f"  Created role: {r['role_name']}")
+            print(f"  Created role: {role_name}")
 
 
-# ─── Custom Fields ────────────────────────────────────────────────────────────
+# ─── Customer Custom Fields ───────────────────────────────────────────────────
 
-def create_custom_fields_on_sales_order():
-    """Add channel fields on Sales Order header."""
+def create_customer_custom_fields():
+    """Add channel-specific fields to Customer for manager filtering."""
     fields = {
-        "Sales Order": [
+        "Customer": [
             {
                 "fieldname": "channel_section",
-                "label": "Channel Pricing",
+                "label": "Channel Info",
                 "fieldtype": "Section Break",
-                "insert_after": "selling_price_list",
+                "insert_after": "customer_name",
                 "collapsible": 1,
             },
             {
-                "fieldname": "channel_partner",
-                "label": "Channel Partner",
+                "fieldname": "assigned_sales_person",
+                "label": "Assigned Sales Person",
                 "fieldtype": "Link",
-                "options": "Customer",
+                "options": "Sales Person",
                 "insert_after": "channel_section",
+                "in_list_view": 1,
+                "in_standard_filter": 1,
             },
             {
                 "fieldname": "channel_col_break",
                 "fieldtype": "Column Break",
-                "insert_after": "channel_partner",
+                "insert_after": "assigned_sales_person",
             },
             {
-                "fieldname": "total_discloseable_amount",
-                "label": "Total Discloseable Amount",
-                "fieldtype": "Currency",
+                "fieldname": "customer_company",
+                "label": "Company Name",
+                "fieldtype": "Data",
                 "insert_after": "channel_col_break",
-                "read_only": 1,
-                "bold": 1,
+                "in_standard_filter": 1,
             },
         ]
     }
     create_custom_fields(fields, ignore_validate=True)
 
 
-def create_custom_fields_on_sales_order_item():
-    """Add dual pricing fields to Sales Order Item child table."""
-    fields = {
-        "Sales Order Item": [
-            {
-                "fieldname": "channel_pricing_section",
-                "label": "Channel Pricing",
-                "fieldtype": "Section Break",
-                "insert_after": "amount",
-                "collapsible": 1,
-            },
-            {
-                "fieldname": "plan",
-                "label": "SME Plan",
-                "fieldtype": "Link",
-                "options": "Plan Master",
-                "insert_after": "channel_pricing_section",
-            },
-            {
-                "fieldname": "discloseable_rate",
-                "label": "Discloseable Rate",
-                "fieldtype": "Currency",
-                "insert_after": "plan",
-                "read_only": 1,
-            },
-            {
-                "fieldname": "discloseable_amount",
-                "label": "Discloseable Amount",
-                "fieldtype": "Currency",
-                "insert_after": "discloseable_rate",
-                "read_only": 1,
-            },
-            {
-                "fieldname": "price_gap",
-                "label": "Price Gap",
-                "fieldtype": "Currency",
-                "insert_after": "discloseable_amount",
-                "read_only": 1,
-            },
-        ]
-    }
-    create_custom_fields(fields, ignore_validate=True)
+# ─── Workflow ─────────────────────────────────────────────────────────────────
+
+def create_workflow():
+    """Create the Sales Form approval workflow."""
+    if frappe.db.exists("Workflow", "Sales Form Approval"):
+        return
+
+    # Create workflow states
+    states = [
+        ("Draft",            "grey",   "Edit"),
+        ("Pending Approval", "yellow", ""),
+        ("Approved",         "green",  ""),
+        ("Rejected",         "red",    "Edit"),
+    ]
+    for state_name, style, allow_edit in states:
+        if not frappe.db.exists("Workflow State", state_name):
+            doc = frappe.new_doc("Workflow State")
+            doc.workflow_state_name = state_name
+            doc.style              = style
+            doc.insert(ignore_permissions=True)
+
+    # Create workflow actions
+    actions = ["Submit for Approval", "Approve", "Reject", "Resubmit"]
+    for action in actions:
+        if not frappe.db.exists("Workflow Action Master", action):
+            doc = frappe.new_doc("Workflow Action Master")
+            doc.workflow_action_name = action
+            doc.insert(ignore_permissions=True)
+
+    # Create workflow
+    wf = frappe.new_doc("Workflow")
+    wf.workflow_name    = "Sales Form Approval"
+    wf.document_type    = "Sales Form"
+    wf.is_active        = 1
+    wf.send_email_alert = 0
+    wf.workflow_state_field = "workflow_state"
+
+    wf.states = []
+    state_configs = [
+        ("Draft",            "Draft",            "Channel Sales",   1),
+        ("Pending Approval", "Pending Approval",  "Channel Manager", 0),
+        ("Approved",         "Approved",          "Channel Manager", 0),
+        ("Rejected",         "Rejected",          "Channel Sales",   1),
+    ]
+    for state, doc_status_label, allow_edit_role, is_optional_state in state_configs:
+        wf.append("states", {
+            "state":           state,
+            "doc_status":      "0" if state in ["Draft", "Rejected"] else ("1" if state == "Approved" else "0"),
+            "allow_edit":      allow_edit_role,
+            "is_optional_state": is_optional_state,
+        })
+
+    wf.transitions = []
+    transitions = [
+        ("Draft",            "Submit for Approval", "Pending Approval", "Channel Sales",   ""),
+        ("Pending Approval", "Approve",             "Approved",          "Channel Manager", ""),
+        ("Pending Approval", "Reject",              "Rejected",          "Channel Manager", ""),
+        ("Rejected",         "Resubmit",            "Pending Approval",  "Channel Sales",   ""),
+    ]
+    for from_state, action, next_state, allowed, condition in transitions:
+        wf.append("transitions", {
+            "state":       from_state,
+            "action":      action,
+            "next_state":  next_state,
+            "allowed":     allowed,
+            "condition":   condition,
+        })
+
+    wf.insert(ignore_permissions=True)
+    print("  Created workflow: Sales Form Approval")

@@ -2,11 +2,6 @@ import frappe
 
 
 def has_permission(doc, ptype="read", user=None):
-    """
-    Frappe v16: must explicitly return True to grant permission.
-    Sales team: only see their own KPI Targets.
-    Managers: see all and write.
-    """
     if not user:
         user = frappe.session.user
 
@@ -16,11 +11,9 @@ def has_permission(doc, ptype="read", user=None):
     if frappe.has_role("Channel Sales", user=user):
         if ptype in ("create", "write", "delete"):
             return False
-
-        sales_person = frappe.db.get_value("Sales Person", {"user_id": user}, "name")
-        if not sales_person:
+        sp = frappe.db.get_value("Sales Person", {"user_id": user}, "name")
+        if not sp:
             return False
-
-        return True if doc.sales_person == sales_person else False
+        return True if doc.sales_person == sp else False
 
     return False

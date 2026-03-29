@@ -1,6 +1,5 @@
 from frappe import _
 
-
 def get_data():
     return [
         {
@@ -9,6 +8,5 @@ def get_data():
             "icon": "octicon octicon-broadcast",
             "type": "module",
             "label": _("Channel Management"),
-            "description": _("DU SME Plan tracking, dual pricing, KPIs and renewals"),
         }
     ]

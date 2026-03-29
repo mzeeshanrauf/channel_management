@@ -9,7 +9,7 @@ def has_permission(doc, ptype="read", user=None):
         return True
 
     if frappe.has_role("Channel Sales", user=user):
-        if ptype in ("create", "write", "delete"):
+        if ptype == "delete":
             return False
         sp = frappe.db.get_value("Sales Person", {"user_id": user}, "name")
         if not sp:

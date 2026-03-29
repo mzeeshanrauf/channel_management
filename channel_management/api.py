@@ -3,15 +3,21 @@ from frappe import _
 
 
 @frappe.whitelist()
+def get_sales_person_for_user():
+    """Get Sales Person linked to logged-in user via user_id custom field."""
+    sp = frappe.db.get_value("Sales Person", {"user_id": frappe.session.user}, "name")
+    return sp or None
+
+
+@frappe.whitelist()
 def get_pricing_for_plan(plan, partner=None):
     """
-    Returns pricing for a plan.
-    - Managers get both actual_price and discloseable_price
-    - Sales get only discloseable_price (actual is set server-side on validate)
+    Get Channel Pricing for a plan.
+    Managers see actual_price. Sales see only sale_amount (discloseable).
     """
-    from channel_management.events.sales_order import _get_channel_pricing
+    from channel_management.channel_management.doctype.sales_form.sales_form import get_channel_pricing
 
-    pricing = _get_channel_pricing(plan, partner)
+    pricing = get_channel_pricing(plan, partner)
     if not pricing:
         return None
 
@@ -21,91 +27,117 @@ def get_pricing_for_plan(plan, partner=None):
         frappe.has_role("Administrator",   user=user)
     )
 
-    # Always return discloseable price so the JS can populate the field
-    result = {
-        "discloseable_price": flt(pricing["discloseable_price"]),
-        "actual_price":       flt(pricing["actual_price"]),   # needed so rate field gets set
-        "price_gap":          flt(pricing["actual_price"]) - flt(pricing["discloseable_price"]),
-        "is_manager":         is_manager,
+    return {
+        "sale_amount":   float(pricing["discloseable_price"] or 0),
+        "actual_amount": float(pricing["actual_price"] or 0) if is_manager else float(pricing["discloseable_price"] or 0),
+        "price_gap":     float(pricing["actual_price"] - pricing["discloseable_price"]) if is_manager else 0,
+        "is_manager":    is_manager,
     }
-
-    # For sales users, mask actual_price in the response
-    # (server-side on_validate will always use the real actual_price)
-    if not is_manager:
-        result["actual_price"] = flt(pricing["discloseable_price"])
-        result["price_gap"]    = 0
-
-    return result
-
-
-def flt(val):
-    try:
-        return float(val or 0)
-    except Exception:
-        return 0.0
 
 
 @frappe.whitelist()
-def get_customer_plan_status_counts():
-    """Returns counts of plans by status for the current user."""
+def get_customer_plan_summary(customer):
+    """Get plan summary for a customer."""
+    frappe.has_permission("Customer Plan", throw=True)
+
     user       = frappe.session.user
     is_manager = (
         frappe.has_role("Channel Manager", user=user) or
         frappe.has_role("Administrator",   user=user)
     )
 
-    conditions = ""
-    values     = []
+    # For sales, verify they are assigned to this customer
+    if not is_manager:
+        sp = frappe.db.get_value("Sales Person", {"user_id": user}, "name")
+        assigned_sp = frappe.db.get_value("Customer", customer, "assigned_sales_person")
+        if sp != assigned_sp:
+            frappe.throw(_("Not permitted to view this customer's plans."), frappe.PermissionError)
+
+    plans = frappe.db.sql("""
+        SELECT cp.name, cp.plan, cp.start_date, cp.end_date,
+               cp.status, cp.days_to_expiry, cp.sales_form,
+               cp.sales_person, cp.sale_amount_snapshot,
+               cp.actual_amount_snapshot
+        FROM `tabCustomer Plan` cp
+        WHERE cp.customer = %s AND cp.status != 'Cancelled'
+        ORDER BY cp.end_date ASC
+    """, (customer,), as_dict=True)
+
+    # Hide actual_amount from sales
+    if not is_manager:
+        for p in plans:
+            p.pop("actual_amount_snapshot", None)
+
+    customer_doc = frappe.db.get_value(
+        "Customer", customer,
+        ["customer_name", "mobile_no", "email_id", "customer_group", "territory", "assigned_sales_person"],
+        as_dict=True
+    )
+
+    return {
+        "customer":         customer_doc,
+        "total":            len(plans),
+        "active":           sum(1 for p in plans if p.status == "Active"),
+        "expiring_soon":    sum(1 for p in plans if p.status == "Expiring Soon"),
+        "renewal_required": sum(1 for p in plans if p.status == "Renewal Required"),
+        "expired":          sum(1 for p in plans if p.status == "Expired"),
+        "plans":            plans,
+        "is_manager":       is_manager,
+    }
+
+
+@frappe.whitelist()
+def get_my_customers():
+    """Get customers assigned to the logged-in sales person."""
+    user = frappe.session.user
+    sp   = frappe.db.get_value("Sales Person", {"user_id": user}, "name")
+    if not sp:
+        return []
+
+    return frappe.get_all(
+        "Customer",
+        filters={"assigned_sales_person": sp},
+        fields=["name", "customer_name", "mobile_no", "email_id"],
+        order_by="customer_name asc",
+    )
+
+
+@frappe.whitelist()
+def get_dashboard_stats():
+    """Get stats for the channel management dashboard."""
+    user       = frappe.session.user
+    is_manager = (
+        frappe.has_role("Channel Manager", user=user) or
+        frappe.has_role("Administrator",   user=user)
+    )
+
+    sp_filter = ""
+    values    = []
 
     if not is_manager:
         sp = frappe.db.get_value("Sales Person", {"user_id": user}, "name")
         if sp:
-            conditions = "AND sales_person = %s"
+            sp_filter = "AND sales_person = %s"
             values.append(sp)
 
-    result = frappe.db.sql(f"""
-        SELECT status, COUNT(*) AS count
+    # Plan status counts
+    plan_counts = frappe.db.sql(f"""
+        SELECT status, COUNT(*) as count
         FROM `tabCustomer Plan`
-        WHERE status != 'Cancelled'
-        {conditions}
+        WHERE status != 'Cancelled' {sp_filter}
         GROUP BY status
     """, values, as_dict=True)
 
-    counts = {"Active": 0, "Expiring Soon": 0, "Renewal Required": 0, "Expired": 0}
-    for row in result:
-        if row.status in counts:
-            counts[row.status] = row.count
+    # Sales form counts
+    form_counts = frappe.db.sql(f"""
+        SELECT workflow_state, COUNT(*) as count
+        FROM `tabSales Form`
+        WHERE 1=1 {sp_filter}
+        GROUP BY workflow_state
+    """, values, as_dict=True)
 
-    return counts
-
-
-@frappe.whitelist()
-def get_my_kpi_summary():
-    """Returns KPI summary for the logged-in sales person."""
-    from frappe.utils import today, getdate
-
-    user       = frappe.session.user
-    is_manager = (
-        frappe.has_role("Channel Manager", user=user) or
-        frappe.has_role("Administrator",   user=user)
-    )
-
-    today_date = getdate(today())
-    filters    = {
-        "period_start": ["<=", today_date],
-        "period_end":   [">=", today_date],
+    return {
+        "plan_counts": plan_counts,
+        "form_counts": form_counts,
+        "is_manager":  is_manager,
     }
-
-    if not is_manager:
-        sp = frappe.db.get_value("Sales Person", {"user_id": user}, "name")
-        if not sp:
-            return []
-        filters["sales_person"] = sp
-
-    return frappe.get_all(
-        "KPI Target",
-        filters=filters,
-        fields=["sales_person", "kpi_type", "period_label",
-                "target_value", "achieved_value", "achievement_percentage", "status"],
-        order_by="achievement_percentage asc",
-    )
