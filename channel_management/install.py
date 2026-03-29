@@ -73,8 +73,8 @@ def create_workflow():
         return
 
     # Create workflow states
-    states = [
-    ('Draft', 'Secondary', 'Edit'),          # or ""
+   states = [
+    ('Draft', '', 'Edit'),                  # ✅ MUST be empty
     ('Pending Approval', 'Warning', ''),
     ('Approved', 'Success', ''),
     ('Rejected', 'Danger', 'Edit')
