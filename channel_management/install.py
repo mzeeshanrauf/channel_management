@@ -1,3 +1,6 @@
+import frappe
+
+
 def after_install():
     create_roles()
     create_customer_custom_fields()
