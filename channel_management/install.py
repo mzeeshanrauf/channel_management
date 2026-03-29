@@ -1,3 +1,10 @@
+def after_install():
+    create_roles()
+    create_customer_custom_fields()
+    create_workflow()
+    frappe.db.commit()
+    print("✅ Channel Management installed successfully.")
+    
 def create_workflow():
     """Create the Sales Form approval workflow."""
     if frappe.db.exists("Workflow", "Sales Form Approval"):
