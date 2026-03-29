@@ -1,0 +1,17 @@
+{
+ "add_total_row": 1,
+ "creation": "2024-01-01 00:00:00.000000",
+ "doctype": "Report",
+ "is_standard": "Yes",
+ "modified": "2024-01-01 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Channel Management",
+ "name": "Sales Margin Report",
+ "owner": "Administrator",
+ "ref_doctype": "Sales Form",
+ "report_name": "Sales Margin Report",
+ "report_type": "Script Report",
+ "roles": [
+  {"role": "Channel Manager"}
+ ]
+}

@@ -1,0 +1,1 @@
+channel_management.patches.v1_0.install_initial_setup

@@ -1,0 +1,18 @@
+{
+ "add_total_row": 0,
+ "creation": "2024-01-01 00:00:00.000000",
+ "doctype": "Report",
+ "is_standard": "Yes",
+ "modified": "2024-01-01 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Channel Management",
+ "name": "KPI Report",
+ "owner": "Administrator",
+ "ref_doctype": "KPI Target",
+ "report_name": "KPI Report",
+ "report_type": "Script Report",
+ "roles": [
+  {"role": "Channel Sales"},
+  {"role": "Channel Manager"}
+ ]
+}

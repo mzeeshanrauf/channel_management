@@ -1,0 +1,30 @@
+{
+ "actions": [],
+ "creation": "2024-01-01 00:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "plan", "start_date", "end_date", "col_break_1",
+  "sale_amount", "actual_amount", "price_gap"
+ ],
+ "fields": [
+  {"bold": 1, "fieldname": "plan", "fieldtype": "Link", "in_list_view": 1, "label": "Plan", "options": "Plan Master", "reqd": 1, "columns": 3},
+  {"fieldname": "start_date", "fieldtype": "Date", "in_list_view": 1, "label": "Start Date", "reqd": 1, "columns": 2},
+  {"fieldname": "end_date", "fieldtype": "Date", "in_list_view": 1, "label": "End Date", "reqd": 1, "columns": 2},
+  {"fieldname": "col_break_1", "fieldtype": "Column Break"},
+  {"bold": 1, "fieldname": "sale_amount", "fieldtype": "Currency", "in_list_view": 1, "label": "Sale Amount", "read_only": 1, "columns": 2},
+  {"fieldname": "actual_amount", "fieldtype": "Currency", "label": "Actual Amount", "read_only": 1},
+  {"fieldname": "price_gap", "fieldtype": "Currency", "label": "Price Gap", "read_only": 1}
+ ],
+ "istable": 1,
+ "links": [],
+ "modified": "2024-01-01 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Channel Management",
+ "name": "Sales Form Item",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "creation",
+ "sort_order": "DESC"
+}
