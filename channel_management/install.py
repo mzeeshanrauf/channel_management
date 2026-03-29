@@ -74,11 +74,11 @@ def create_workflow():
 
     # Create workflow states
     states = [
-        ("Draft",            "grey",   "Edit"),
-        ("Pending Approval", "yellow", ""),
-        ("Approved",         "green",  ""),
-        ("Rejected",         "red",    "Edit"),
-    ]
+    ('Draft', 'Secondary', 'Edit'),          # or ""
+    ('Pending Approval', 'Warning', ''),
+    ('Approved', 'Success', ''),
+    ('Rejected', 'Danger', 'Edit')
+]
     for state_name, style, allow_edit in states:
         if not frappe.db.exists("Workflow State", state_name):
             doc = frappe.new_doc("Workflow State")
