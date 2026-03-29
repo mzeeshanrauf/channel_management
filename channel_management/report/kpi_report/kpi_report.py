@@ -15,9 +15,9 @@ def execute(filters=None):
 def validate_permissions():
     user = frappe.session.user
     if not (
-        frappe.has_role("Channel Manager", user=user) or
-        frappe.has_role("Channel Sales",   user=user) or
-        frappe.has_role("Administrator",   user=user)
+        ("Channel Manager" in frappe.get_roles(user)) or
+        ("Channel Sales" in frappe.get_roles(user)) or
+        ("Administrator" in frappe.get_roles(user))
     ):
         frappe.throw(_("Not permitted."), frappe.PermissionError)
 
@@ -38,7 +38,7 @@ def get_columns():
 
 def get_data(filters):
     user       = frappe.session.user
-    is_manager = frappe.has_role("Channel Manager", user=user) or frappe.has_role("Administrator", user=user)
+    is_manager = ("Channel Manager" in frappe.get_roles(user)) or ("Administrator" in frappe.get_roles(user))
 
     conditions = []
     values     = {}

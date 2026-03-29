@@ -7,9 +7,9 @@ def has_permission(doc, ptype="read", user=None):
         user = frappe.session.user
     if user == "Guest":
         return False
-    if frappe.has_role("Channel Manager", user=user) or frappe.has_role("Administrator", user=user):
+    if ("Channel Manager" in frappe.get_roles(user)) or ("Administrator" in frappe.get_roles(user)):
         return True
-    if frappe.has_role("Channel Sales", user=user):
+    if ("Channel Sales" in frappe.get_roles(user)):
         if ptype in ("create", "write", "delete"):
             return False
         sp = get_sales_person_for_user(user)

@@ -23,8 +23,8 @@ def get_pricing_for_plan(plan, partner=None):
 
     user       = frappe.session.user
     is_manager = (
-        frappe.has_role("Channel Manager", user=user) or
-        frappe.has_role("Administrator",   user=user)
+        ("Channel Manager" in frappe.get_roles(user)) or
+        ("Administrator" in frappe.get_roles(user))
     )
 
     return {
@@ -42,8 +42,8 @@ def get_customer_plan_summary(customer):
 
     user       = frappe.session.user
     is_manager = (
-        frappe.has_role("Channel Manager", user=user) or
-        frappe.has_role("Administrator",   user=user)
+        ("Channel Manager" in frappe.get_roles(user)) or
+        ("Administrator" in frappe.get_roles(user))
     )
 
     # For sales, verify they are assigned to this customer
@@ -107,8 +107,8 @@ def get_dashboard_stats():
     """Get stats for the channel management dashboard."""
     user       = frappe.session.user
     is_manager = (
-        frappe.has_role("Channel Manager", user=user) or
-        frappe.has_role("Administrator",   user=user)
+        ("Channel Manager" in frappe.get_roles(user)) or
+        ("Administrator" in frappe.get_roles(user))
     )
 
     sp_filter = ""

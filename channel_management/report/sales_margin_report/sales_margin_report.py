@@ -15,8 +15,8 @@ def execute(filters=None):
 def validate_permissions():
     user = frappe.session.user
     if not (
-        frappe.has_role("Channel Manager", user=user) or
-        frappe.has_role("Administrator",   user=user)
+        ("Channel Manager" in frappe.get_roles(user)) or
+        ("Administrator" in frappe.get_roles(user))
     ):
         frappe.throw(_("Sales Margin Report is for Channel Managers only."), frappe.PermissionError)
 
